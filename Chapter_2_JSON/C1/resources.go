@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"sort"
 )
@@ -18,23 +17,22 @@ func getResources(url string) ([]map[string]any, error) {
 
 	defer res.Body.Close()
 
-	var data []map[string]interface{}
-	body, err := io.ReadAll(res.Body)
+	decoder := json.NewDecoder(res.Body)
+	err = decoder.Decode(&resources)
 	if err != nil {
-		return nil, err
+		return resources, err
 	}
-	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, err
-	}
-	return data, nil
 
+	return resources, nil
 }
 
 func logResources(resources []map[string]any) {
-	formattedStrings := make([]string, 0)
+	var formattedStrings []string
 
-	for key, val := range resources {
-		formattedStrings = append(formattedStrings, fmt.Sprintf("Key: %s - Value %v", key, val))
+	for _, resource := range resources {
+		for key, value := range resource {
+			formattedStrings = append(formattedStrings, fmt.Sprintf("Key: %s - Value: %v", key, value))
+		}
 	}
 
 	sort.Strings(formattedStrings)
